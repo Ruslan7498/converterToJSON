@@ -1,13 +1,11 @@
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.opencsv.CSVReader;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.w3c.dom.*;
@@ -34,8 +32,11 @@ class Main {
         writeString(jsonCsv, FILE_NAME_DATA);
         String jsonXml = listToJson(listXml);
         writeString(jsonXml, FILE_NAME_DATA2);
-        //String json = readString(FILE_NAME_DATA);
-        //jsonToList(json);
+        String json = readString(FILE_NAME_DATA);
+        List<Employee> list = jsonToList(json);
+        for (Employee employee : list) {
+            System.out.println(employee.toString());
+        }
     }
 
     public static List<Employee> parseCSV(String[] columnMapping, String fileName) {
@@ -64,10 +65,8 @@ class Main {
     }
 
     public static void writeString(String json, String fileName) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("Employee", json);
         try (FileWriter file = new FileWriter(fileName)) {
-            file.write(jsonObject.toJSONString());
+            file.write(json);
             file.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -111,33 +110,32 @@ class Main {
     public static String getElement(Element element, String name) {
         return element.getElementsByTagName(name).item(0).getTextContent();
     }
-/*
+
     public static String readString(String FILE_NAME_DATA) {
-        JSONParser parser = new JSONParser();
         String strJson = null;
-        try {
-            Object obj = parser.parse(new FileReader(FILE_NAME_DATA));
-            JSONObject jsonObject = (JSONObject) obj;
-            strJson = (String) jsonObject.toJSONString();
-        } catch (IOException | ParseException e) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME_DATA))) {
+            while ((strJson = reader.readLine()) != null) {
+                return strJson;
+            }
+        } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-        return strJson;
+        return null;
     }
 
-    public static void jsonToList(String json) {
+    public static List<Employee> jsonToList(String json) {
+        List<Employee> list = new ArrayList<>();
         JSONParser parser = new JSONParser();
         try {
-            Object obj = parser.parse(json);
-            JSONObject jsonObject = (JSONObject) obj;
-            JSONArray listJson = (JSONArray) jsonObject.get("Employee");
+            JSONArray employee = (JSONArray) parser.parse(json);
             GsonBuilder builder = new GsonBuilder();
             Gson gson = builder.create();
-            Employee employee = gson.fromJson(json, Employee.class);
-            System.out.println(employee.toString());
+            for (Object emp : employee) {
+                list.add(gson.fromJson(emp.toString(), Employee.class));
+            }
         } catch (ParseException e) {
             e.printStackTrace();
         }
+        return list;
     }
- */
 }
